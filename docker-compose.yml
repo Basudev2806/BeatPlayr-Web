@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  beatplayr-frontend:
+    build: 
+      context: ./frontend
+    container_name: beatplayr-frontend
+    environment:
+      - VITE_API_URL=https://beatplayr.online/api
+      - NODE_ENV=production
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+    networks:
+      - beatplayr-network
+    depends_on:
+      - beatplayr-backend
+
+  beatplayr-backend:
+    build: 
+      context: ./backend/docker
+    container_name: beatplayr-api
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - CORS_ORIGIN=https://beatplayr.online
+      - SMTP_HOST=smtp.hostinger.com
+      - SMTP_PORT=587
+      - SMTP_USER=support@techbanda.com
+      - SMTP_PASS=Basudev@2608
+      - ADMIN_EMAIL=support@techbanda.com
+    ports:
+      - "3001:3001"
+    env_file:
+      - ./backend/.env
+    volumes:
+      - ./backend/logs:/app/logs
+    restart: unless-stopped
+    networks:
+      - beatplayr-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  beatplayr-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  logs:
